@@ -6,7 +6,7 @@ require "engine.interface.ObjectIdentify"
 local Stats = require("engine.interface.ActorStats")
 local Talents = require("engine.interface.ActorTalents")
 local DamageType = require("engine.DamageType")
-local ActorResource = require "engine.interface.ActorResource"
+local ActorResource = require("engine.interface.ActorResource")
 local Combat = require("mod.class.interface.Combat")
 
 local _M = loadPrevious(...)
@@ -104,7 +104,7 @@ function mod_align_stat( in_str, off_mod )
 	in_str = in_str or ""
 	local attr_offs = 18
 	if string.len( in_str ) < attr_offs then
-		return in_str .. string.rep(" ",attr_offs - string.len( in_str )+off_mod)
+		return in_str .. string.rep(" ", attr_offs - string.len( in_str ) + off_mod)
 	else
 		return in_str .. " "
 	end
@@ -359,10 +359,9 @@ function _M:getTextualDesc(compare_with, use_actor)
 	local desc_wielder = function(w, compare_with, field)
 		w = w or {}
 		w = w[field] or {}
-		
 		compare_table_fields(w, compare_with, field, "inc_stats", "%+d", "#ORANGE#" .. mod_align_stat( "Stats" ) .. "#LAST#", function(item)
-				return (" #ORANGE#%s#LAST#"):format(Stats.stats_def[item].short_name:capitalize())
-		end)
+				return ("#ORANGE#%s#LAST#"):format(Stats.stats_def[item].short_name:capitalize())
+			end, true)
 		if not (self.alchemist_bomb or self.type == "gem") then
 			desc:add( mod_DPS_sep,true )
 		end
@@ -1583,12 +1582,12 @@ function _M:descAccuracyBonus(desc, weapon, use_actor)
 end
 
 function _M:compareTableFields(item1, items, infield, field, outformat, text, kfunct, mod, isinversed, filter)
-	mod = mod or 1
+	mod = mod or false
 	isinversed = isinversed or false
 	local ret = tstring{}
-	local added = 0
+	--ret:add(text)
+	local thisLine = tstring{text}
 	local add = false
-	ret:add(text)
 	local tab = {}
 	if item1[field] then
 		for k, v in pairs(item1[field]) do
@@ -1605,54 +1604,74 @@ function _M:compareTableFields(item1, items, infield, field, outformat, text, kf
 		end
 	end
 	local count1 = 0
-	local mod_sep = nil
-	local testStr = tstring{}
+	local mod_sep = ", "
 	for k, v in pairs(tab) do
-		if not filter or filter(k, v) then
-			testStr:add((count1==0 and text or " "), outformat:format((v[1] or 0)), kfunct(k))
-			if mod_is_exceed_tlp( testStr ) then
-				mod_sep = mod_align_stat( "\n", 1 )
-				testStr = tstring{mod_sep,outformat:format((v[1] or 0)), kfunct(k)}
-			else
-				mod_sep = " "
-			end
-			local count = 0
-			if isinversed then
-				ret:add(("%s"):format((count1 > 0) and mod_sep or ""), (v[1] or 0) > 0 and {"color","RED"} or {"color","LIGHT_GREEN"}, outformat:format((v[1] or 0)), {"color","LAST"})
-			else
-				ret:add(("%s"):format((count1 > 0) and mod_sep or ""), (v[1] or 0) < 0 and {"color","RED"} or {"color","LIGHT_GREEN"}, outformat:format((v[1] or 0)), {"color","LAST"})
-			end
-			count1 = count1 + 1
-			if v[1] then
-				add = true
-			end
-			for kk, vv in pairs(v) do
-				if kk > 1 then
-					if count == 0 then
-						ret:add("(")
-					elseif count > 0 then
-						ret:add(mod_sep)
-					end
-					if vv ~= (v[1] or 0) then
-						if isinversed then
-							ret:add((v[1] or 0) > vv and {"color","RED"} or {"color","LIGHT_GREEN"}, outformat:format((v[1] or 0) - vv), {"color","LAST"})
-						else
-							ret:add((v[1] or 0) < vv and {"color","RED"} or {"color","LIGHT_GREEN"}, outformat:format((v[1] or 0) - vv), {"color","LAST"})
-						end
-					else
-						ret:add("-")
-					end
-					add = true
-					count = count + 1
-				end
-			end
-			if count > 0 then
-				ret:add(")")
-			end
-			ret:add(kfunct(k))
-		end
-	end
+		local thisStr = tstring{}
 
+		if mod then
+			-- add field name
+			thisStr:add(
+				("%s"):format((count1 > 0) and mod_sep or ""),
+				kfunct(k), " "
+			)
+		end
+		-- add the field number
+		local count = 0
+		local spacer = (count1 > 0 and not mod) and mod_sep or ""
+		thisStr:add(
+			("%s"):format(spacer),
+			(isinversed and ((v[1] or 0) > 0 and {"color","RED"} or {"color","LIGHT_GREEN"}) or ((v[1] or 0) < 0 and {"color","RED"} or {"color","LIGHT_GREEN"})),
+			outformat:format((v[1] or 0)),
+			{"color","LAST"})
+
+		count1 = count1 + 1
+
+		-- add compare to
+		if v[1] then
+			add = true
+		end
+		for kk, vv in pairs(v) do
+			if kk > 1 then
+				if count == 0 then
+					thisStr:add(" (")
+				elseif (count > 0 and not mod) then
+					thisStr:add(mod_sep)
+				end
+				if vv ~= (v[1] or 0) then
+					thisStr:add(
+						(isinversed and ((v[1] or 0) > vv and {"color","RED"} or {"color","LIGHT_GREEN"}) or ((v[1] or 0) < vv and {"color","RED"} or {"color","LIGHT_GREEN"})),
+						outformat:format((v[1] or 0) - vv), 
+						{"color","LAST"}
+					)
+				else
+					thisStr:add("-")
+				end
+				add = true
+				count = count + 1
+			end
+		end
+		if count > 0 then
+			thisStr:add(")")
+		end
+		if not mod then
+			-- add field name
+			thisStr:add(kfunct(k))
+		end
+
+		local thisStrStr = tostring(thisStr)
+		local thisLineStr = tostring(thisLine)
+		local testLine = thisLine
+		testLine:add(thisStrStr)
+		local length = tostring(testLine):gsub( "#.-#", "" ):len()
+		if length > 48 then
+			-- newline
+			ret:add(thisLineStr)
+			thisLine = tstring{}
+			thisLine:add(mod_align_stat("\n", 1), thisStrStr:gsub(mod_sep, ""))
+		end
+
+	end
+	ret:add(tostring(thisLine))
 	if add then
 		ret:add(true)
 		return ret

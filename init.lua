@@ -1,16 +1,22 @@
-long_name = "Cleaner Item Descriptions"
-short_name = "cleaner-descriptions" -- Determines the name of your addon's file.
+long_name = "Cleaner Item Descriptions REVISED"
+short_name = "cleaner-descriptions-revise" -- Determines the name of your addon's file.
 for_module = "tome"
 version = {1,7,0}
-addon_version = {2,1,3}
+addon_version = {0,9,9}
 weight = 49 -- needs to load before ZOmnibus for compatability
-author = {"Recaiden"}
+author = {"Joerle", "Recaiden"}
 homepage = ''
-description = [[This is a fork of Better Item Descriptions that simply makes the tooltip larger and uses long phrases instead of abbreviations.
+description = [[This is a fork of Cleaner Item Descriptions v2.1.4 (which itself is a fork of Better Item Descriptions) which makes Item Stats easier to read.
 
-You still shouldn't use it if you don't know what item stats mean already.
+This version:
+- corrects a small miscalculation for the line length when looking at item stats (not configured for all zoom levels/custom settings)--this allows the stats to correctly flow to the next line and line up the indents (even works when comparing items with +ctrl).
+- restores the 'stat seperator' as a white comma (a white / in default item desc)
+- shows Str/Dex/Con etc. with the numerical value AFTER the stat_desc; ex: "Str +2, Con +1" (as opposed to other stats, which show "+5 Lightning, +10 Fire" etc.)
 
-Works with zOmnibus's inscription-compare feature
+Known bugs:
+- comparing a shield in the inventory when not having a comparable item equipped throws a lua exception
+
+As with the original "Cleaner Item Descriptions", this works with zOmnibus's inscription-compare feature
 - sorts all stats by category
 - item's passive power always the same blue color
 - item's usable power - always yellow
@@ -18,7 +24,7 @@ Works with zOmnibus's inscription-compare feature
 - encumbrance value moved to the right under item name
 - "on hit" powers always green
 - "Stats" have an orange highlight and placed before others]]
-tags = {'interface','item','description','better','tooltip'} -- tags MUST immediately follow description
+tags = {'interface','item','description','better','cleaner','redux','tooltip'} -- tags MUST immediately follow description
 
 superload = true
 hooks = true
