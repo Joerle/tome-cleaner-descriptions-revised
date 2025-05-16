@@ -12,15 +12,15 @@ local Combat = require("mod.class.interface.Combat")
 local _M = loadPrevious(...)
 
 local mod_max_tpl_len = { Minimalist = { small = { fantasy = 73, web = 73, basic = 73 },
-                                         normal = { fantasy = 51, web = 51, basic = 59 },
+                                         normal = { fantasy = 48, web = 51, basic = 59 },
                                          big = { fantasy = 45, web = 45, basic = 49 } },
                           Classic =    { small = { fantasy = 45, web = 45, basic = 45 },
                                          normal = { fantasy = 33, web = 33, basic = 33 },
                                          big = { fantasy = 29, web = 29, basic = 29 } } }
 
 function mod_get_tlp_len( mode, font_size, font_type )
-	if not mod_max_tpl_len then return 50 end
-	if not mod_max_tpl_len[mode] then return 50 end
+	if not mod_max_tpl_len then return 48 end
+	if not mod_max_tpl_len[mode] then return 48 end
 	if not mod_max_tpl_len[mode][font_size] then return mod_max_tpl_len[mode]["normal"]["basic"] end
 	if not mod_max_tpl_len[mode][font_size][font_type] then return mod_max_tpl_len[mode][font_size]["basic"] end
 
@@ -250,7 +250,7 @@ function _M:getTextualDesc(compare_with, use_actor)
 				desc:add("Accuracy is based on willpower for this weapon.", true)
 			end
 			local dt = DamageType:get(combat.damtype or DamageType.PHYSICAL)
-			desc:add("Weapon Damage: ", dt.text_color or "#WHITE#", dt.name:upper(),{"color","LAST"})
+			desc:add("Weapon Damage: ", dt.text_color or "#WHITE#", dt.name:upper(), {"color","LAST"})
 			for dtyp, val in pairs(combat.melee_project or combat.ranged_project or {}) do
 				dt = DamageType:get(dtyp)
 				if dt then
@@ -428,9 +428,12 @@ function _M:getTextualDesc(compare_with, use_actor)
 													 return col[2],mod_eff_name( (" %s"):format(DamageType.dam_def[item].name) ),{"color","LAST"}
 		end)      
 		
-		compare_table_fields(w, compare_with, field, "inc_damage", "%+d%%", mod_align_stat( "Damage" ), function(item)
-													 local col = (DamageType.dam_def[item] and DamageType.dam_def[item].text_color or "#WHITE#"):toTString()
-													 return col[2], (" %s"):format(item == "all" and "all" or (DamageType.dam_def[item] and DamageType.dam_def[item].name or "??")), {"color","LAST"}
+		compare_table_fields(
+			w, compare_with, field,
+			"inc_damage", "%+d%%", mod_align_stat( "Damage" ),
+			function(item)
+				local col = (DamageType.dam_def[item] and DamageType.dam_def[item].text_color or "#WHITE#"):toTString()
+				return col[2], (" %s"):format(item == "all" and "all" or (DamageType.dam_def[item] and DamageType.dam_def[item].name or "??")), {"color","LAST"}
 		end)
 		compare_table_fields(w, compare_with, field, "resists_pen", "%+d%%", mod_align_stat( "Ignore resists" ), function(item)
 													 local col = (DamageType.dam_def[item] and DamageType.dam_def[item].text_color or "#WHITE#"):toTString()
@@ -1265,10 +1268,10 @@ function _M:descCombat(use_actor, combat, compare_with, field, add_table, is_fak
 				end
 			end
 			if any_diff then
-				local s = ( mod_align_stat( "Weapon Damage",-1 ) .. "%3d%% (%s)  Range: 1.0x-%.1fx (%s)"):format(base_power * 100, table.concat(power_diff, " / "), base_range, table.concat(range_diff, " / "))
+				local s = ( mod_align_stat( "Weapon Damage", -1 ) .. "%3d%% (%s)  Range: 1.0x-%.1fx (%s)"):format(base_power * 100, table.concat(power_diff, " / "), base_range, table.concat(range_diff, " / "))
 				desc:merge(s:toTString())
 			else
-				desc:add(( mod_align_stat( "Weapon Damage",-1 ) .. "%3d%%  Range: 1.0x-%.1fx"):format(base_power * 100, base_range))
+				desc:add(( mod_align_stat( "Weapon Damage", -1 ) .. "%3d%%  Range: 1.0x-%.1fx"):format(base_power * 100, base_range))
 			end
 		else
 			local power_diff = {}
@@ -1289,7 +1292,7 @@ function _M:descCombat(use_actor, combat, compare_with, field, add_table, is_fak
 			else
 				power_diff = ("(%s)"):format(table.concat(power_diff, " / "))
 			end
-			desc:add(( mod_align_stat( "Weapon Damage",-1) .. "%.1f - %.1f"):format((combat.dam or 0) + (add_table.dam or 0), ((combat.damrange or (1.1 - (add_table.damrange or 0))) + (add_table.damrange or 0)) * ((combat.dam or 0) + (add_table.dam or 0))))
+			desc:add(( mod_align_stat( "Weapon Damage",-3) .. "%.1f - %.1f"):format((combat.dam or 0) + (add_table.dam or 0), ((combat.damrange or (1.1 - (add_table.damrange or 0))) + (add_table.damrange or 0)) * ((combat.dam or 0) + (add_table.dam or 0))))
 			desc:merge(power_diff:toTString())
 			local col = (combat.damtype and DamageType:get(combat.damtype) and DamageType:get(combat.damtype).text_color or "#WHITE#"):toTString()
 			desc:add(" ",col[2],DamageType:get(combat.damtype or DamageType.PHYSICAL).name:capitalize(),{"color","LAST"})
@@ -1586,8 +1589,8 @@ function _M:compareTableFields(item1, items, infield, field, outformat, text, kf
 	isinversed = isinversed or false
 	local ret = tstring{}
 	--ret:add(text)
-	local thisLine = tstring{text}
 	local add = false
+	local thisLine = tstring{text}
 	local tab = {}
 	if item1[field] then
 		for k, v in pairs(item1[field]) do
@@ -1658,16 +1661,15 @@ function _M:compareTableFields(item1, items, infield, field, outformat, text, kf
 			thisStr:add(kfunct(k))
 		end
 
-		local thisStrStr = tostring(thisStr)
-		local thisLineStr = tostring(thisLine)
+		local thisStrToStr = tostring(thisStr)
+		local thisLineToStr = tostring(thisLine)
 		local testLine = thisLine
-		testLine:add(thisStrStr)
-		local length = tostring(testLine):gsub( "#.-#", "" ):len()
-		if length > 48 then
+		testLine:add(thisStrToStr)
+		if mod_is_exceed_tlp( testLine ) then
 			-- newline
-			ret:add(thisLineStr)
+			ret:add(thisLineToStr)
 			thisLine = tstring{}
-			thisLine:add(mod_align_stat("\n", 1), thisStrStr:gsub(mod_sep, ""))
+			thisLine:add(mod_align_stat("\n", 1), thisStrToStr:gsub(mod_sep, ""))
 		end
 
 	end
